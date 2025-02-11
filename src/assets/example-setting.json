@@ -1,0 +1,11 @@
+{
+  "device-settings": {
+    "device-name": "Fitness",
+    "temperature-threshold": 21,
+    "update-interval": 10
+  },
+  "network-configuration": {
+    "ip-address": "192.168.1.100",
+    "port": 901
+  }
+}

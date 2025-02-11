@@ -1,0 +1,57 @@
+<details class="group">
+  <summary
+    class="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50"
+  >
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined">wifi</span>
+      <h2 class="text-lg font-semibold">Network Configuration</h2>
+      <span
+        *ngIf="isAnyFieldModified"
+        class="px-2 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full"
+        >Modified</span
+      >
+    </div>
+    <span
+      class="material-symbols-outlined transition-transform group-open:-rotate-180"
+      >expand_more</span
+    >
+  </summary>
+  <div class="p-6 bg-gray-50 space-y-4">
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium">IP Address</label>
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="config.ipAddress"
+          placeholder="192.168.1.100"
+          class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          [class.border-yellow-400]="isModified('ipAddress')"
+          [class.bg-yellow-50]="isModified('ipAddress')"
+        />
+        <span
+          *ngIf="isModified('ipAddress')"
+          class="absolute right-2 top-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full"
+          >Modified</span
+        >
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium">Port</label>
+      <div class="relative">
+        <input
+          type="number"
+          [(ngModel)]="config.port"
+          placeholder="8080"
+          class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          [class.border-yellow-400]="isModified('port')"
+          [class.bg-yellow-50]="isModified('port')"
+        />
+        <span
+          *ngIf="isModified('port')"
+          class="absolute right-2 top-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full"
+          >Modified</span
+        >
+      </div>
+    </div>
+  </div>
+</details>

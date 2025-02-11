@@ -1,0 +1,77 @@
+<details class="group">
+  <summary
+    class="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50"
+  >
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined">settings</span>
+      <h2 class="text-lg font-semibold">Device Settings</h2>
+      <span
+      *ngIf="isAnyFieldModified"
+      class="px-2 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full"
+      >Modified</span
+    >
+    </div>
+    <span
+      class="material-symbols-outlined transition-transform group-open:-rotate-180"
+      >expand_more</span
+    >
+  </summary>
+  <div class="p-6 bg-gray-50 space-y-4">
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium">Device Name</label>
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="settings.deviceName"
+          placeholder="Device Name"
+          class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          [class.border-yellow-400]="isModified('deviceName')"
+          [class.bg-yellow-50]="isModified('deviceName')"
+        />
+        <span
+          *ngIf="isModified('deviceName')"
+          class="absolute right-2 top-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full"
+          >Modified</span
+        >
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium"
+        >Temperature Threshold (°C)</label
+      >
+      <div class="relative">
+        <input
+          type="number"
+          [(ngModel)]="settings.temperatureThreshold"
+          placeholder="25"
+          class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          [class.border-yellow-400]="isModified('temperatureThreshold')"
+          [class.bg-yellow-50]="isModified('temperatureThreshold')"
+        />
+        <span
+          *ngIf="isModified('temperatureThreshold')"
+          class="absolute right-2 top-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full"
+          >Modified</span
+        >
+      </div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-medium">Update Interval (ms)</label>
+      <div class="relative">
+        <input
+          type="number"
+          [(ngModel)]="settings.updateInterval"
+          placeholder="1000"
+          class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+          [class.border-yellow-400]="isModified('updateInterval')"
+          [class.bg-yellow-50]="isModified('updateInterval')"
+        />
+        <span
+          *ngIf="isModified('updateInterval')"
+          class="absolute right-2 top-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full"
+          >Modified</span
+        >
+      </div>
+    </div>
+  </div>
+</details>

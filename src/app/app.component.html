@@ -1,0 +1,29 @@
+<main>
+  <div id="webcrumbs">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-6">Device Settings</h1>
+      <div class="flex gap-3">
+        <input
+          type="file"
+          accept=".json"
+          class="hidden"
+          id="fileInput"
+          (change)="importSettings($event)"
+        />
+        <label
+          for="fileInput"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">upload_file</span> Import
+          Settings
+        </label>
+        <button
+          class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">save</span> Save &amp; Apply
+        </button>
+      </div>
+    </header>
+  </div>
+  <router-outlet />
+</main>

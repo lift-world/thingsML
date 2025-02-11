@@ -1,0 +1,59 @@
+<div id="webcrumbs">
+  <div class="w-[800px] bg-white rounded-xl shadow-xl p-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-6">Device Settings</h1>
+      <div class="flex gap-3">
+        <input type="file" accept=".json" class="hidden" id="fileInput" (change)="importSettings($event)" />
+        <label
+          for="fileInput"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">upload_file</span> Import
+          Settings
+        </label>
+        <button
+          class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">save</span> Save &amp; Apply
+        </button>
+      </div>
+    </header>
+    <div class="mb-8">
+      <div
+        class="inline-flex items-center gap-6 px-4 py-2 bg-gray-50 rounded-lg"
+      >
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></span>
+          <span class="text-sm font-medium">Modified</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-orange-400 animate-pulse"></span>
+          <span class="text-sm font-medium">Saving &amp; Applying</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+          <span class="text-sm font-medium">Confirmed</span>
+        </div>
+      </div>
+    </div>
+    <ul class="space-y-6">
+      <li class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <app-device-settings-form [settings]="deviceSettings"></app-device-settings-form>
+      </li>
+      <li class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <app-network-configuration [config]="networkConfig"></app-network-configuration>
+      </li>
+    </ul>
+    <app-connect-state-alert [status]="connectionStatus" (retry)="retryConnection()"></app-connect-state-alert>
+  </div>
+</div>
+
+<!-- Add this wherever you want the modal to appear -->
+<div *ngIf="showConfigModal" class="modal-overlay">
+  <div class="modal-content">
+    <app-device-configuration-modal
+      [fileData]="importedFileData"
+      (closeModal)="closeConfigModal($event)"
+    ></app-device-configuration-modal>
+  </div>
+</div>
