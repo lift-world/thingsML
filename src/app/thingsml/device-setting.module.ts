@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { DeviceSettingRoutingModule } from './device-setting-routing.module';
 
 import { DeviceSettingsComponent } from './device-setting.component';
@@ -15,16 +15,15 @@ import { ConnectStateAlertComponent } from '../sub-components/connect-state-aler
   ],
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     DeviceSettingRoutingModule,
     DeviceSettingsFormModule,
     NetworkConfigurationModule,
     DeviceConfigurationModalModule,
-    ConnectStateAlertComponent
+    ConnectStateAlertComponent,
   ],
   providers: [],
   bootstrap: [DeviceSettingsComponent]
-
-
 })
 export class DeviceSettingModule {}

@@ -1,5 +1,5 @@
-<main>
-  <div id="webcrumbs">
+<main class="container mx-auto p-4">
+  <!-- <div id="webcrumbs">
     <header class="mb-8">
       <h1 class="text-3xl font-bold mb-6">Device Settings</h1>
       <div class="flex gap-3">
@@ -23,7 +23,104 @@
           <span class="material-symbols-outlined">save</span> Save &amp; Apply
         </button>
       </div>
+      <app-connect-state-alert [status]="connectionStatus" (retry)="retryConnection()"></app-connect-state-alert>
+      <app-table-edit></app-table-edit>
     </header>
+  </div> -->
+  <div class="flex flex-col gap-4">
+    <!-- Control Panel -->
+    <div class="flex gap-4 items-center">
+      <div class="flex-1">
+        <input
+          type="file"
+          class="file-input file-input-bordered w-full max-w-xs"
+          (change)="importSettings($event)"
+          accept=".json,.thingsml"
+          aria-label="Import JSON settings file"
+        />
+      </div>
+
+      <button
+        class="btn btn-accent"
+        (click)="downloadJSON()"
+        aria-label="Export JSON settings"
+      >
+        Export JSON
+      </button>
+
+      <div class="flex-1">
+        <label
+          class="input input-bordered flex items-center gap-2"
+          for="searchInput"
+        >
+          <input
+            type="text"
+            id="searchInput"
+            class="grow"
+            placeholder="Search"
+            (input)="handleSearchChange($event)"
+            aria-label="Search settings"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            class="h-4 w-4 opacity-70"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </label>
+      </div>
+
+      <div class="form-control">
+        <label class="label cursor-pointer">
+          <span class="label-text mr-2">Edit Mode</span>
+          <input
+            type="checkbox"
+            class="toggle"
+            [checked]="editMode"
+            (change)="toggleEditMode($event)"
+            aria-label="Toggle edit mode"
+          />
+        </label>
+      </div>
+    </div>
+
+    <!-- Status Dashboard -->
+    <div class="stats shadow" role="region" aria-label="System Status">
+      <div class="stat place-items-center">
+        <div class="stat-title">Server Status</div>
+        <div class="stat-value mb-1" [class]="getServerStatusColor()">{{ serverStatus }}</div>
+        <div class="stat-desc">{{ serverStatusDescription }}</div>
+      </div>
+
+      <div class="stat place-items-center">
+        <div class="stat-title">Change Status</div>
+        <div class="stat-value mb-1" [class]="getChangeStatusColor()">{{ changeStatus }}</div>
+        <div class="stat-desc text-secondary">{{ changeStatusDescription }}</div>
+      </div>
+
+      <div class="stat place-items-center">
+        <div class="stat-title">Saved Status</div>
+        <div class="stat-value mb-1" [class]="getSavedStatusColor()">{{ savedStatus }}</div>
+        <div class="stat-desc">{{ savedStatusDescription }}</div>
+      </div>
+    </div>
+
+    <!-- JSON Editor -->
+    <app-json-editor
+      [data]="jsonData"
+      [modifiedFields]="modifiedFields"
+      (dataChange)="updateJson($event)"
+      [disabled]="!editMode"
+      aria-label="JSON Configuration Editor"
+      [file]="file"
+    ></app-json-editor>
   </div>
-  <router-outlet />
+  <!-- <router-outlet /> -->
 </main>
