@@ -7,10 +7,12 @@ import {
   Inject,
   Optional,
   SimpleChanges,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { decode } from 'cbor-x/decode'
+import { EditorService } from '../services/editor.service';
 
 export interface Logger {
   info(message: string, ...args: any[]): void;
@@ -32,33 +34,53 @@ export const LOGGER = new InjectionToken<Logger>('Logger');
     JsonEditorComponent,
   ],
 })
-export class JsonEditorComponent {
+export class JsonEditorComponent implements OnInit {
   @Input() data: any;
   @Output() dataChange = new EventEmitter<Record<string, any>>();
   @Input() disabled: boolean = false;
   @Input() modifiedFields: Set<string> = new Set();
   @Input() parentPath: string = '';
   @Input() file!: File;
+  @Input() status: 'changed' | 'applied' | 'confirmed' = 'confirmed';
+  @Output() statusChange = new EventEmitter<'changed' | 'applied' | 'confirmed'>();
 
   private readonly logger: Logger;
+  private originalData: any = {};
 
-  constructor(@Optional() @Inject(LOGGER) logger: Logger | null) {
+  constructor(
+    @Optional() @Inject(LOGGER) logger: Logger | null,
+    private editorService: EditorService
+  ) {
     this.logger = logger || console;
+
+    this.editorService.status$.subscribe(status => {
+      this.status = status;
+      this.statusChange.emit(status);
+    });
   }
 
-  // async ngOnChanges(changes: SimpleChanges) {
-  //   if (changes['file'] && changes['file'].currentValue) {
-  //     const file = changes['file'].currentValue;
-  //     const buffer = await file.arrayBuffer();
-  //     await this.processInputFile(new Uint8Array(buffer));
-  //   }
-  // }
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['data'] && changes['data'].firstChange) {
+      this.originalData = JSON.parse(JSON.stringify(this.data));
+    }
+    if (changes['data'] && !changes['data'].firstChange) {
+      this.updateStatus('changed');
+    }
+  }
 
   onValueChange(key: string, event: any) {
     const value = event?.target?.value ?? event;
     const newData = { ...this.data };
     newData[key] = value;
+
+    if (this.originalData[key] === value) {
+      this.modifiedFields.delete(key);
+    } else {
+      this.modifiedFields.add(key);
+    }
+
     this.dataChange.emit(newData);
+    this.updateStatus('changed');
   }
 
   addField() {
@@ -96,7 +118,7 @@ export class JsonEditorComponent {
 
   onKeyChange(oldKey: string, event: Event) {
     const newKey = (event.target as HTMLInputElement).value.trim();
-    if (!newKey || newKey === oldKey || newKey in this.data) return; // Prevent invalid or duplicate keys
+    if (!newKey || newKey === oldKey || newKey in this.data) return;
 
     this.dataChange.emit(
       Object.fromEntries(
@@ -105,7 +127,6 @@ export class JsonEditorComponent {
         )
       )
     );
-    console.log(this.data);
   }
 
   trackByKey(index: number, key: string): string {
@@ -122,16 +143,18 @@ export class JsonEditorComponent {
 
   isFieldModified(key: string): boolean {
     if (!this.modifiedFields) return false;
+    if (this.modifiedFields.has(key)) {
+      if (this.data[key] === this.originalData[key]) {
+        this.modifiedFields.delete(key);
+        return false;
+      }
+      return true;
+    }
 
-    // Check if the current key is directly modified
-    if (this.modifiedFields.has(key)) return true;
-
-    // Check if any parent path is modified
     const currentPath = this.getParentPath();
     const fullPath = currentPath ? `${currentPath}.${key}` : key;
     if (this.modifiedFields.has(fullPath)) return true;
 
-    // Check if any child paths are modified
     for (const modifiedField of this.modifiedFields) {
       if (modifiedField.startsWith(fullPath + '.')) return true;
     }
@@ -186,13 +209,49 @@ export class JsonEditorComponent {
     }
   }
 
+  private updateStatus(newStatus: 'changed' | 'applied' | 'confirmed') {
+    if (this.status !== newStatus) {
+      this.status = newStatus;
+      this.statusChange.emit(newStatus);
+    }
+  }
+
+  async confirmChanges(fileBuffer: Uint8Array) {
+    try {
+      const savedData = await this.decodeInput(fileBuffer);
+      if (JSON.stringify(savedData) === JSON.stringify(this.data)) {
+        this.updateStatus('confirmed');
+      } else {
+        this.updateStatus('changed');
+        this.logger.warn('[JsonEditor] Saved data does not match expected changes');
+      }
+    } catch (error) {
+      this.logger.error('[JsonEditor] Error confirming changes:', error);
+      this.updateStatus('changed');
+    }
+  }
+
   public async processInputFile(fileBuffer: Uint8Array) {
     try {
       const decodedData = await this.decodeInput(new Uint8Array(fileBuffer), 'json');
       this.data = decodedData;
       this.dataChange.emit(decodedData);
+      this.updateStatus('confirmed');
     } catch (error) {
       this.logger.error('[JsonEditor] Error processing file:', error);
     }
+  }
+
+  ngOnInit() {
+    // Additional initialization logic if needed
+  }
+
+  getStatusIndicatorClass(): string {
+    const colorMap: Record<string, string> = {
+      'changed': 'bg-yellow-400',
+      'applied': 'bg-orange-400',
+      'confirmed': 'bg-green-400'
+    };
+    return `w-3 h-3 rounded-full ${colorMap[this.status] || 'bg-gray-400'} ${this.status === 'applied' ? 'animate-pulse' : ''}`;
   }
 }

@@ -1,53 +1,32 @@
 <main class="container mx-auto p-4">
-  <!-- <div id="webcrumbs">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold mb-6">Device Settings</h1>
-      <div class="flex gap-3">
-        <input
-          type="file"
-          accept=".json"
-          class="hidden"
-          id="fileInput"
-          (change)="importSettings($event)"
-        />
-        <label
-          for="fileInput"
-          class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
-        >
-          <span class="material-symbols-outlined">upload_file</span> Import
-          Settings
-        </label>
+  <div class="flex flex-col gap-4">
+    <div class="flex gap-16 items-center">
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <input
+            type="file"
+            class="file-input file-input-bordered w-full max-w-xs"
+            (change)="importSettings($event)"
+            accept=".json,.thingsml"
+            aria-label="Import JSON settings file"
+          />
+        </div>
         <button
-          class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+          class="btn btn-secondary"
+          (click)="confirmChanges()"
+          aria-label="Confirm Changes"
+          [disabled]="!file"
         >
-          <span class="material-symbols-outlined">save</span> Save &amp; Apply
+          Confirm Changes
+        </button>
+        <button
+          class="btn btn-accent"
+          (click)="downloadJSON()"
+          aria-label="Export JSON settings"
+        >
+          Save &amp; Apply
         </button>
       </div>
-      <app-connect-state-alert [status]="connectionStatus" (retry)="retryConnection()"></app-connect-state-alert>
-      <app-table-edit></app-table-edit>
-    </header>
-  </div> -->
-  <div class="flex flex-col gap-4">
-    <!-- Control Panel -->
-    <div class="flex gap-4 items-center">
-      <div class="flex-1">
-        <input
-          type="file"
-          class="file-input file-input-bordered w-full max-w-xs"
-          (change)="importSettings($event)"
-          accept=".json,.thingsml"
-          aria-label="Import JSON settings file"
-        />
-      </div>
-
-      <button
-        class="btn btn-accent"
-        (click)="downloadJSON()"
-        aria-label="Export JSON settings"
-      >
-        Export JSON
-      </button>
-
       <div class="flex-1">
         <label
           class="input input-bordered flex items-center gap-2"
@@ -76,38 +55,33 @@
           </svg>
         </label>
       </div>
-
-      <div class="form-control">
-        <label class="label cursor-pointer">
-          <span class="label-text mr-2">Edit Mode</span>
-          <input
-            type="checkbox"
-            class="toggle"
-            [checked]="editMode"
-            (change)="toggleEditMode($event)"
-            aria-label="Toggle edit mode"
-          />
-        </label>
-      </div>
     </div>
 
     <!-- Status Dashboard -->
     <div class="stats shadow" role="region" aria-label="System Status">
       <div class="stat place-items-center">
         <div class="stat-title">Server Status</div>
-        <div class="stat-value mb-1" [class]="getServerStatusColor()">{{ serverStatus }}</div>
+        <div class="stat-value mb-1" [class]="getStatusColor(serverStatus)">
+          {{ serverStatus }}
+        </div>
         <div class="stat-desc">{{ serverStatusDescription }}</div>
       </div>
 
       <div class="stat place-items-center">
         <div class="stat-title">Change Status</div>
-        <div class="stat-value mb-1" [class]="getChangeStatusColor()">{{ changeStatus }}</div>
-        <div class="stat-desc text-secondary">{{ changeStatusDescription }}</div>
+        <div class="stat-value mb-1" [class]="getStatusColor(changeStatus)">
+          {{ changeStatus }}
+        </div>
+        <div class="stat-desc text-secondary">
+          {{ changeStatusDescription }}
+        </div>
       </div>
 
       <div class="stat place-items-center">
         <div class="stat-title">Saved Status</div>
-        <div class="stat-value mb-1" [class]="getSavedStatusColor()">{{ savedStatus }}</div>
+        <div class="stat-value mb-1" [class]="getStatusColor(savedStatus)">
+          {{ savedStatus }}
+        </div>
         <div class="stat-desc">{{ savedStatusDescription }}</div>
       </div>
     </div>

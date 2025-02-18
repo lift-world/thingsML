@@ -9,8 +9,8 @@ export const routes: Routes = [
     path: 'json-editor',
     loadComponent: () => import('./json-editor/json-editor.component').then(m => m.JsonEditorComponent)
   },
-  // {
-  //   path: 'device-settings',
-  //   loadComponent: () => import('./device-settings/device-settings.component').then(m => m.DeviceSettingsComponent)
-  // }
+  {
+    path: 'device-settings',
+    loadComponent: () => import('./device-settings/device-settings.module').then(m => m.DeviceSettingsModule)
+  }
 ];

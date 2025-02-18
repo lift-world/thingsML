@@ -5,15 +5,15 @@ import { ConnectStateAlertComponent } from './sub-components/connect-state-alert
 import { TableEditComponent } from './sub-components/table-edit/table-edit.component';
 import { JsonEditorComponent } from './json-editor/json-editor.component';
 import * as Papa from 'papaparse';
+import { EditorService } from './services/editor.service';
 
 interface StatusState {
   status: string;
   description: string;
 }
 
-// Update the status type
-type StatusType = 'Changed' | 'Applied' | 'Confirmed' | 'No Changes' | 'Up to Date' | 'Saved' | 'Save Failed';
-
+// Simplified status types
+type StatusType = 'Changed' | 'Applied' | 'Confirmed' | 'No Changes' | 'Saved' | 'Save Failed' | 'Up to Date';
 type ConnectionStatus = 'Connected' | 'Disconnected' | 'Connecting' | 'Error';
 
 @Component({
@@ -35,41 +35,32 @@ export class AppComponent implements OnInit {
   editMode: boolean = true; // Default to true if you want edit mode enabled by default
 
   jsonData = {
-    "email": "user@gmail.com",
-    "audience": "http://someaudience.com",
-    "jti": "MYJTI12342",
-    "name": "John Smith1",
-    "details": {
-      "address": "123 Main St",
-      "city": "Metropolis",
-      "zip": "123456"
-    }
-  }
-
+    email: 'user@gmail.com',
+    audience: 'http://someaudience.com',
+    jti: 'MYJTI12342',
+    name: 'John Smith1',
+    address: '123 Main St',
+    city: 'Metropolis',
+    zip: '123456',
+  };
 
   originalJsonData = { ...this.jsonData };
 
   csvData: string[][] = [];
   csvHeaders: string[] = [];
-
-  // Update status properties to use the new type
   serverStatus: StatusType = 'Confirmed';
-  serverStatusDescription = 'System is running normally';
-
   changeStatus: StatusType = 'No Changes';
-  changeStatusDescription = 'No pending modifications';
-
   savedStatus: StatusType = 'Up to Date';
-  savedStatusDescription = 'All changes are saved';
-
-  // Add new property to track modified fields
   modifiedFields: Set<string> = new Set();
   file!: File;
 
-  constructor() {}
+  serverStatusDescription = 'System is running normally';
+  changeStatusDescription = 'No pending modifications';
+  savedStatusDescription = 'All changes are saved';
+
+  constructor(private editorService: EditorService) {}
 
   ngOnInit(): void {
-    // Initialize component
     this.loadInitialData();
   }
 
@@ -81,58 +72,89 @@ export class AppComponent implements OnInit {
   updateJson(newData: any) {
     this.jsonData = newData;
     this.updateModifiedFields(this.originalJsonData, this.jsonData);
-    this.updateChangeStatus('Unsaved Changes', 'Modifications pending');
+    this.updateChangeStatus('Changed', 'Modifications pending');
   }
 
   private updateModifiedFields(original: any, current: any, path: string = ''): void {
-    for (const key in { ...original, ...current }) {
-      const currentPath = path ? `${path}.${key}` : key;
-
-      if (typeof original[key] === 'object' && typeof current[key] === 'object') {
-        this.updateModifiedFields(original[key], current[key], currentPath);
-      } else if (JSON.stringify(original[key]) !== JSON.stringify(current[key])) {
-        this.modifiedFields.add(currentPath);
-      }
+    // Clear existing fields if at root level
+    if (!path) {
+      this.modifiedFields.clear();
     }
-    console.log(this.modifiedFields);
+
+    // Handle cases where either value is null/undefined
+    if (original === undefined || original === null || current === undefined || current === null) {
+      if (original !== current) {
+        this.modifiedFields.add(path);
+      }
+      return;
+    }
+
+    // Handle different types
+    if (typeof original !== typeof current) {
+      this.modifiedFields.add(path);
+      return;
+    }
+
+    // Handle arrays
+    if (Array.isArray(original) && Array.isArray(current)) {
+      if (original.length !== current.length) {
+        this.modifiedFields.add(path);
+      } else {
+        original.forEach((value, index) => {
+          const currentPath = path ? `${path}[${index}]` : `[${index}]`;
+          this.updateModifiedFields(value, current[index], currentPath);
+        });
+      }
+      return;
+    }
+
+    // Handle objects
+    if (typeof original === 'object' && typeof current === 'object') {
+      const allKeys = new Set([...Object.keys(original), ...Object.keys(current)]);
+
+      allKeys.forEach(key => {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        if (!(key in original) || !(key in current)) {
+          this.modifiedFields.add(currentPath);
+        } else {
+          this.updateModifiedFields(original[key], current[key], currentPath);
+        }
+      });
+      return;
+    }
+
+    // Handle primitive values
+    if (original !== current) {
+      this.modifiedFields.add(path);
+    }
   }
 
   handleSearchChange(event: Event): void {
-    const searchInput = event.target as HTMLInputElement;
-    const searchValue = searchInput.value.toLowerCase();
-    console.log('Search value:', searchValue);
-
+    const searchValue = (event.target as HTMLInputElement).value.toLowerCase();
     if (!searchValue) {
       this.jsonData = { ...this.originalJsonData };
       return;
     }
 
-    // Create a filtered copy of the data structure
-    const searchInObject = (obj: any): any => {
-      const result: any = {};
-
-      for (const [key, value] of Object.entries(obj)) {
-        // Check if the key matches the search
-        const keyMatches = key.toLowerCase().includes(searchValue);
-
-        if (typeof value === 'object' && value !== null) {
-          const nestedResult = searchInObject(value);
-          if (Object.keys(nestedResult).length > 0 || keyMatches) {
-            result[key] = keyMatches ? value : nestedResult;
-          }
-        } else if (
-          keyMatches ||
-          String(value).toLowerCase().includes(searchValue)
-        ) {
-          result[key] = value;
-        }
-      }
-
-      return result;
-    };
-
-    const filtered = searchInObject(this.originalJsonData);
+    const filtered = this.searchInObject(this.originalJsonData, searchValue);
     this.jsonData = Object.keys(filtered).length > 0 ? filtered : this.jsonData;
+  }
+
+  private searchInObject(obj: any, searchValue: string): any {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const keyMatches = key.toLowerCase().includes(searchValue);
+      if (typeof value === 'object' && value !== null) {
+        const nestedResult = this.searchInObject(value, searchValue);
+        if (Object.keys(nestedResult).length > 0 || keyMatches) {
+          result[key] = keyMatches ? value : nestedResult;
+        }
+      } else if (keyMatches || String(value).toLowerCase().includes(searchValue)) {
+        result[key] = value;
+      }
+    }
+    return result;
   }
 
   importSettings(event: Event): void {
@@ -148,38 +170,23 @@ export class AppComponent implements OnInit {
         const content = e.target?.result as string;
         this.jsonData = JSON.parse(content);
         this.updateModifiedFields(this.originalJsonData, this.jsonData);
-        this.updateChangeStatus('Changes Imported', 'New configuration loaded');
+        // Check if the imported data differs from original
+        const hasChanges = this.modifiedFields.size > 0;
+        this.updateChangeStatus(
+          hasChanges ? 'Changed' : 'Confirmed',
+          hasChanges ? 'New configuration loaded with changes' : 'New configuration matches original'
+        );
       } catch (error) {
         console.error('Error parsing JSON file:', error);
-        this.updateChangeStatus('Import Failed', 'Invalid JSON format');
+        this.updateChangeStatus('Save Failed', 'Invalid JSON format');
       }
     };
 
     reader.onerror = () => {
-      this.updateChangeStatus('Import Failed', 'Error reading file');
+      this.updateChangeStatus('Save Failed', 'Error reading file');
     };
 
     reader.readAsText(file);
-  }
-
-  saveChanges(): void {
-    try {
-      // TODO: Implement your save logic here
-      this.originalJsonData = { ...this.jsonData };
-      this.modifiedFields.clear(); // Clear modified fields after saving
-      this.savedStatus = 'Saved';
-      this.savedStatusDescription = `Last saved at ${new Date().toLocaleTimeString()}`;
-      this.updateChangeStatus('No Changes', 'All changes are saved');
-    } catch (error) {
-      console.error('Error saving changes:', error);
-      this.savedStatus = 'Save Failed';
-      this.savedStatusDescription = 'Error occurred while saving';
-    }
-  }
-
-  retryConnection(): void {
-    this.connectionStatus = 'Connecting';
-    // Implement your connection retry logic here
   }
 
   onCsvFileSelect(event: Event): void {
@@ -204,6 +211,23 @@ export class AppComponent implements OnInit {
     };
   }
 
+  saveChanges(): void {
+    try {
+      this.originalJsonData = { ...this.jsonData };
+      this.modifiedFields.clear();
+      this.savedStatus = 'Saved';
+      this.updateChangeStatus('Applied', 'Changes have been applied');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      this.savedStatus = 'Save Failed';
+    }
+  }
+
+  retryConnection(): void {
+    this.connectionStatus = 'Connecting';
+    // Implement your connection retry logic here
+  }
+
   deleteRow(index: number): void {
     this.csvData.splice(index, 1);
   }
@@ -225,13 +249,13 @@ export class AppComponent implements OnInit {
     const checkbox = event.target as HTMLInputElement;
     this.editMode = checkbox.checked;
     this.updateChangeStatus(
-      this.editMode ? 'Edit Mode' : 'View Mode',
+      this.editMode ? 'Changed' : 'No Changes',
       this.editMode ? 'Changes can be made' : 'Read-only mode'
     );
   }
 
-  private updateChangeStatus(status: string, description: string): void {
-    this.changeStatus = status as StatusType;
+  private updateChangeStatus(status: StatusType, description: string): void {
+    this.changeStatus = status;
     this.changeStatusDescription = description;
   }
 
@@ -248,52 +272,42 @@ export class AppComponent implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  getChangeStatusColor(): string {
-    switch (this.changeStatus) {
-      case 'Changed':
-        return 'text-yellow-500';
-      case 'Applied':
-        return 'text-orange-500';
-      case 'Confirmed':
-        return 'text-green-500';
-      case 'No Changes':
-        return 'text-gray-500';
-      case 'Up to Date':
-        return 'text-blue-500';
-      case 'Saved':
-        return 'text-green-500';
-      case 'Save Failed':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500'; // default color
+  async confirmChanges() {
+    if (!this.file) {
+      console.error('No file available to confirm changes');
+      return;
+    }
+
+    try {
+      const buffer = await this.file.arrayBuffer();
+      // Compare with originalJsonData instead of file content
+      this.updateModifiedFields(this.originalJsonData, this.jsonData);
+      const hasChanges = this.modifiedFields.size > 0;
+
+      if (this.savedStatus === 'Saved') {
+        this.updateChangeStatus('Applied', 'Changes have been applied');
+      } else {
+        this.updateChangeStatus(
+          hasChanges ? 'Changed' : 'Confirmed',
+          hasChanges ? 'Changes detected from original' : 'No changes from original'
+        );
+      }
+    } catch (error) {
+      console.error('Error confirming changes:', error);
+      this.updateChangeStatus('Save Failed', 'Error confirming changes');
     }
   }
 
-  getServerStatusColor(): string {
-    switch (this.connectionStatus) {
-      case 'Connected':
-        return 'text-green-500';
-      case 'Connecting':
-        return 'text-yellow-500';
-      case 'Disconnected':
-        return 'text-gray-500';
-      case 'Error':
-        return 'text-red-500';
-      default:
-        return ''; // default color
-    }
-  }
-
-  getSavedStatusColor(): string {
-    switch (this.savedStatus) {
-      case 'Saved':
-        return 'text-green-500';
-      case 'Save Failed':
-        return 'text-red-500';
-      case 'Up to Date':
-        return 'text-blue-500';
-      default:
-        return 'text-gray-500';
-    }
+  getStatusColor(status: StatusType): string {
+    const colorMap: Record<string, string> = {
+      'Changed': 'text-yellow-500',
+      'Applied': 'text-orange-500',
+      'Confirmed': 'text-green-500',
+      'No Changes': 'text-gray-500',
+      'Up to Date': 'text-blue-500',
+      'Saved': 'text-green-500',
+      'Save Failed': 'text-red-500'
+    };
+    return colorMap[status] || 'text-gray-500';
   }
 }

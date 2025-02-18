@@ -2,22 +2,17 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DeviceSettingModule } from './thingsml/device-setting.module';
-import { ConnectStateAlertComponent } from './sub-components/connect-state-alert/connect-state-alert.component';
-import { TableEditComponent } from './sub-components/table-edit/table-edit.component';
-import { JsonEditorComponent } from './json-editor/json-editor.component';
+import { DeviceSettingsModule } from './device-settings/device-settings.module';
 
 @NgModule({
-  declarations: [
-    JsonEditorComponent,
-    ConnectStateAlertComponent,
-    TableEditComponent
-  ],
+  declarations: [],
   imports: [
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
-    DeviceSettingModule
+    DeviceSettingModule,
+    DeviceSettingsModule
   ],
-  exports: [JsonEditorComponent],
+  providers: []
 })
 export class AppModule {}
