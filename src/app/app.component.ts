@@ -170,7 +170,6 @@ export class AppComponent implements OnInit {
         const content = e.target?.result as string;
         this.jsonData = JSON.parse(content);
         this.updateModifiedFields(this.originalJsonData, this.jsonData);
-        // Check if the imported data differs from original
         const hasChanges = this.modifiedFields.size > 0;
         this.updateChangeStatus(
           hasChanges ? 'Changed' : 'Confirmed',
@@ -179,11 +178,13 @@ export class AppComponent implements OnInit {
       } catch (error) {
         console.error('Error parsing JSON file:', error);
         this.updateChangeStatus('Save Failed', 'Invalid JSON format');
+        this.promptRetry('Error parsing JSON file. Would you like to retry?');
       }
     };
 
     reader.onerror = () => {
       this.updateChangeStatus('Save Failed', 'Error reading file');
+      this.promptRetry('Error reading file. Would you like to retry?');
     };
 
     reader.readAsText(file);
@@ -220,6 +221,8 @@ export class AppComponent implements OnInit {
     } catch (error) {
       console.error('Error saving changes:', error);
       this.savedStatus = 'Save Failed';
+      this.updateChangeStatus('Save Failed', 'Error saving changes');
+      this.promptRetry('Error saving changes. Would you like to retry?');
     }
   }
 
@@ -309,5 +312,23 @@ export class AppComponent implements OnInit {
       'Save Failed': 'text-red-500'
     };
     return colorMap[status] || 'text-gray-500';
+  }
+
+  promptRetry(message: string): void {
+    // Open the modal by setting the checkbox to checked
+    const modalCheckbox = document.getElementById('retry-modal') as HTMLInputElement;
+    if (modalCheckbox) {
+      modalCheckbox.checked = true;
+    }
+  }
+
+  retryOperation(): void {
+    // Implement your retry logic here
+    console.info('User chose to retry the operation.');
+    // Close the modal
+    const modalCheckbox = document.getElementById('retry-modal') as HTMLInputElement;
+    if (modalCheckbox) {
+      modalCheckbox.checked = false;
+    }
   }
 }

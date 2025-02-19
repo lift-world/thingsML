@@ -228,6 +228,15 @@ export class JsonEditorComponent implements OnInit {
     } catch (error) {
       this.logger.error('[JsonEditor] Error confirming changes:', error);
       this.updateStatus('changed');
+      this.promptRetry('Error confirming changes. Would you like to retry?');
+    }
+  }
+
+  private promptRetry(message: string): void {
+    // Open the modal by setting the checkbox to checked
+    const modalCheckbox = document.getElementById('retry-modal') as HTMLInputElement;
+    if (modalCheckbox) {
+      modalCheckbox.checked = true;
     }
   }
 
@@ -244,14 +253,5 @@ export class JsonEditorComponent implements OnInit {
 
   ngOnInit() {
     // Additional initialization logic if needed
-  }
-
-  getStatusIndicatorClass(): string {
-    const colorMap: Record<string, string> = {
-      'changed': 'bg-yellow-400',
-      'applied': 'bg-orange-400',
-      'confirmed': 'bg-green-400'
-    };
-    return `w-3 h-3 rounded-full ${colorMap[this.status] || 'bg-gray-400'} ${this.status === 'applied' ? 'animate-pulse' : ''}`;
   }
 }
